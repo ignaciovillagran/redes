@@ -64,7 +64,7 @@ checkArgs::args_t checkArgs::getArgs(){
 	while ((opcion = getopt (argc, argv, optString.c_str())) != -1){
 		switch (opcion) {
 			case 's':
-					if(optarg) parametros.SERVER = optarg;
+					parametros.SERVER = optarg;
 					break;
 			case 'p':
 					parametros.PORT = atoi(optarg);

@@ -21,53 +21,56 @@
 #include "checkArgs.h"
 #include <iostream>    // For cerr and cout
 #include <cstdlib>     // For atoi()
+#include <fstream>
 
-const uint32_t RCVBUFSIZE = 1024;    // Size of receive buffer
+const uint64_t RCVBUFSIZE = 9216;    // Size of receive buffer
 
 int main(int argc, char *argv[]) {
 
 	checkArgs* argumentos = new checkArgs(argc, argv);
-	
+
     std::string servAddress; 
 	uint16_t    echoServPort;
-    std::string echoString;
+    std::string peticion;
 	std::string hostServ;
+	std::string archive;
 
 	servAddress   = argumentos->getArgs().SERVER;
 	echoServPort  = argumentos->getArgs().PORT;
-	echoString    = argumentos->getArgs().ARCHIVO;
-	hostServ      = "Host:"+servAddress;
+	peticion    = "GET / HTTP/1.1\nHost:"+servAddress+"User-Agent: Mozilla/4.0\n\n";
+	archive       = argumentos->getArgs().ARCHIVO;
 
-	delete argumentos;	
-	uint32_t echoStringLen = echoString.length();   // Determine input length
-	uint32_t hostServLen   = servAddress.length();
+	//delete argumentos;	
+	uint32_t peticionLen = peticion.length();   // Determine input length
+	std::ofstream fs(archive);
 
 	try {
 		// Establish connection with the echo server
 		TCPSocket sock(servAddress, echoServPort);
 
 		// Send the string to the server
-		sock.send("GET / HTTP/1.1", echoStringLen);
-		sock.send(hostServ, hostServLen);
+		sock.send(peticion.c_str(), peticionLen);
 
 		char echoBuffer[RCVBUFSIZE + 1];    // Buffer for echo string + \0
 		uint32_t bytesReceived = 0;              // Bytes read on each recv()
 		uint32_t totalBytesReceived = 0;         // Total bytes read
 
 		// Receive the same string back from the server
-		std::cout << "Received: ";               // Setup to print the echoed string
-		while (totalBytesReceived < echoStringLen) {
+		//std::cout << "Received: ";               // Setup to print the echoed string
+		while (totalBytesReceived < peticionLen) {
+			//printf("%i", sock.recv(echoBuffer, RCVBUFSIZE));
 			// Receive up to the buffer size bytes from the sender
 			if ((bytesReceived = (sock.recv(echoBuffer, RCVBUFSIZE))) <= 0) {
-				std::cerr << "Unable to read";
+				std::cerr << "Unable to read\n";
 				exit(EXIT_FAILURE);
 			}
 			totalBytesReceived += bytesReceived;     // Keep tally of total bytes
 			echoBuffer[bytesReceived] = '\0';        // Terminate the string!
-			std::cout << echoBuffer;                      // Print the echo buffer
+			std::cout << echoBuffer;                 // Print the echo buffer
 		}
 		std::cout << std::endl;
-
+		fs << echoBuffer;
+		fs.close();
 		// Destructor closes the socket
 
 	} catch(SocketException &e) {
