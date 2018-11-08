@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
 	servAddress   = argumentos->getArgs().SERVER;
 	echoServPort  = argumentos->getArgs().PORT;
-	peticion    = "GET / HTTP/1.1\nHost:"+servAddress+"User-Agent: Mozilla/4.0\n\n";
+	peticion    = "GET / HTTP/1.1\nHost:"+servAddress+"\n\n";
 	archive       = argumentos->getArgs().ARCHIVO;
 
 	//delete argumentos;	
@@ -53,23 +53,26 @@ int main(int argc, char *argv[]) {
 
 		char echoBuffer[RCVBUFSIZE + 1];    // Buffer for echo string + \0
 		uint32_t bytesReceived = 0;              // Bytes read on each recv()
-		uint32_t totalBytesReceived = 0;         // Total bytes read
+		uint32_t totalBytesReceived = peticionLen+1 ;         // Total bytes read
+		
 
 		// Receive the same string back from the server
 		//std::cout << "Received: ";               // Setup to print the echoed string
-		while (totalBytesReceived < peticionLen) {
+		while (peticionLen<totalBytesReceived) {
 			//printf("%i", sock.recv(echoBuffer, RCVBUFSIZE));
 			// Receive up to the buffer size bytes from the sender
-			if ((bytesReceived = (sock.recv(echoBuffer, RCVBUFSIZE))) <= 0) {
+			
+			if ((bytesReceived = (sock.recv(echoBuffer, RCVBUFSIZE))) <= 0) {				
 				std::cerr << "Unable to read\n";
 				exit(EXIT_FAILURE);
 			}
 			totalBytesReceived += bytesReceived;     // Keep tally of total bytes
 			echoBuffer[bytesReceived] = '\0';        // Terminate the string!
-			std::cout << echoBuffer;                 // Print the echo buffer
+			std::cout << echoBuffer;                 // Print the echo buffer			
+			fs << echoBuffer;
 		}
 		std::cout << std::endl;
-		fs << echoBuffer;
+		
 		fs.close();
 		// Destructor closes the socket
 
